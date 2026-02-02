@@ -1,0 +1,40 @@
+name: undeployed-commits
+
+on:
+    workflow_dispatch:
+
+jobs:
+    undeployed-commits:
+        runs-on: ubuntu-latest
+
+        steps:
+
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: List commits not deployed to prod
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  # Get the last successful production deployment SHA
+                  LAST_DEPLOY_SHA=$(gh api \
+                    "repos/${{ github.repository }}/deployments?environment=prod&per_page=1" \
+                    --jq '.[0].sha')
+
+                  if [ -z "$LAST_DEPLOY_SHA" ]; then
+                    echo "No production deployments found"
+                    exit 0
+                  fi
+
+                  echo "Last production deployment: $LAST_DEPLOY_SHA"
+                  echo "Current HEAD: ${{ github.sha }}"
+                  echo ""
+                  echo "Commits not yet deployed to production:"
+                  echo "========================================="
+
+                  # List commits between last deploy and current HEAD
+                  gh api \
+                    "repos/${{ github.repository }}/compare/${LAST_DEPLOY_SHA}...${{ github.sha }}" \
+                    --jq '.commits[] | "• \(.sha[0:7]) - \(.commit.message | split("\n")[0]) (\(.author.login // .commit.author.name))"'
