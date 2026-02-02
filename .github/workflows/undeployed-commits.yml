@@ -44,4 +44,5 @@ jobs:
                   # List commits between last deploy and current HEAD
                   gh api \
                     "repos/${{ github.repository }}/compare/${LAST_DEPLOY_SHA}...${{ github.sha }}" \
-                    --jq '.commits[] | select(.commit.message | startswith("Merge") | not) | "• \(.sha[0:7]) - \(.commit.message | split("\n")[0]) (\(.author.login // .commit.author.name))"'
+                    # Ignore commits with more than one parent (i.e., merge commits)
+                    --jq '.commits[] | select(.parents | length == 1) | "• \(.sha[0:7]) - \(.commit.message | split("\n")[0]) (\(.author.login // .commit.author.name))"'
