@@ -29,10 +29,3 @@ jobs:
               run: echo "Deploying to $DEPLOY_ENVIRONMENT"
               env:
                   DEPLOY_ENVIRONMENT: ${{ matrix.environment }}
-
-            - name: Tag prod deployment
-              if: matrix.environment == 'prod'
-              run: |
-                  git tag "prod/${{ github.sha }}"
-                  git push origin "prod/${{ github.sha }}"
-
