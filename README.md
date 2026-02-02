@@ -1,73 +1,38 @@
-# React + TypeScript + Vite
+# Undeployed Commits Action
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A GitHub Action that lists commits on your main branch that haven't been deployed to production yet.
 
-Currently, two official plugins are available:
+## Usage
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The action runs manually via workflow dispatch:
 
-## React Compiler
+1. Go to **Actions** tab in your repository
+2. Select **undeployed-commits** workflow
+3. Click **Run workflow**
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## How It Works
 
-## Expanding the ESLint configuration
+The workflow uses the GitHub API to:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. **Find the last successful production deployment** - Queries the Deployments API for your `prod` environment and checks each deployment's status to find the most recent successful one.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+2. **Compare commits** - Uses the Compare API to find all commits between the last deployed SHA and the current HEAD.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+3. **Filter and format output** - Excludes merge commits and displays each undeployed commit with its short SHA, message, and author.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Example Output
+
+```
+Last production deployment: 2fbfbea
+Current HEAD: a4f546d
+
+Commits not yet deployed to production:
+=========================================
+• 8814f23 - Add user authentication (alice)
+• 51c22ef - Fix dashboard loading bug (bob)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Requirements
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Your repository must use **GitHub Environments** with a `prod` environment for production deployments
+- This won't work if you cherry-pick commits for deployment to `prod`
