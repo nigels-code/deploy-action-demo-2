@@ -42,7 +42,7 @@ jobs:
                   echo "========================================="
 
                   # List commits between last deploy and current HEAD
-                  # Ignore commits with more than one parent (i.e., merge commits)
+                  # Ignore GitHub's automatic PR merge commits, but keep developer merge commits
                   gh api \
                     "repos/${{ github.repository }}/compare/${LAST_DEPLOY_SHA}...${{ github.sha }}" \
-                    --jq '.commits[] | select(.parents | length == 1) | "• \(.sha[0:7]) - \(.commit.message | split("\n")[0]) (\(.author.login // .commit.author.name))"'
+                    --jq '.commits[] | select(.commit.message | startswith("Merge pull request #") | not) | "• \(.sha[0:7]) - \(.commit.message | split("\n")[0]) (\(.author.login // .commit.author.name))"'
